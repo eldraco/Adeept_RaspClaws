@@ -11,13 +11,12 @@ import time
 import threading
 import move
 import Adafruit_PCA9685
-from rpi_ws281x import *
-import argparse
 import os
 import FPV
 import psutil
 import switch
 import LED
+from rpi_ws281x import *
 
 step_set = 1
 speed_set = 100
@@ -33,11 +32,12 @@ LED = LED.LED()
 SmoothMode = 0
 steadyMode = 0
 
+
 def breath_led():
     LED.breath(255)
 
 
-def  ap_thread():
+def ap_thread():
     os.system("sudo create_ap wlan0 eth0 AdeeptCar 12345678")
 
 
@@ -79,7 +79,7 @@ def get_swap_info():
 
 
 def info_get():
-    global cpu_t,cpu_u,gpu_t,ram_info
+    global cpu_t, cpu_u, gpu_t, ram_info
     while 1:
         cpu_t = get_cpu_tempfunc()
         cpu_u = get_cpu_use()
@@ -89,12 +89,11 @@ def info_get():
 
 def move_thread():
     global step_set
-    stand_stu = 1
     while 1:
         if not steadyMode:
             if direction_command == 'forward' and turn_command == 'no':
                 if SmoothMode:
-                    move.dove(step_set,35,0.001,DPI,'no')
+                    move.dove(step_set, 35, 0.001, DPI, 'no')
                     step_set += 1
                     if step_set == 5:
                         step_set = 1
@@ -108,7 +107,7 @@ def move_thread():
                     continue
             elif direction_command == 'backward' and turn_command == 'no':
                 if SmoothMode:
-                    move.dove(step_set,-35,0.001,DPI,'no')
+                    move.dove(step_set, -35, 0.001, DPI, 'no')
                     step_set += 1
                     if step_set == 5:
                         step_set = 1
@@ -125,7 +124,7 @@ def move_thread():
 
             if turn_command != 'no':
                 if SmoothMode:
-                    move.dove(step_set,35,0.001,DPI,turn_command)
+                    move.dove(step_set, 35, 0.001, DPI, turn_command)
                     step_set += 1
                     if step_set == 5:
                         step_set = 1
@@ -147,15 +146,17 @@ def move_thread():
         else:
             move.steady_X()
             move.steady()
-            #print('steady')
-            #time.sleep(0.2)
+            # print('steady')
+            # time.sleep(0.2)
 
 
 def info_send_client():
     SERVER_IP = addr[0]
-    SERVER_PORT = 2256   #Define port serial 
-    SERVER_ADDR = (SERVER_IP, SERVER_PORT)
-    Info_Socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Set connection value for socket
+    # Define port serial
+    SERVER_PORT = 2256
+    server_addr = (server_ip, server_port)
+    # set connection value for socket
+    info_socket = socket.socket(socket.af_inet, socket.sock_stream)
     Info_Socket.connect(SERVER_ADDR)
     print(SERVER_ADDR)
     while 1:
@@ -168,23 +169,34 @@ def info_send_client():
 
 def FPV_thread():
     global fpv
-    fpv=FPV.FPV()
+    fpv = FPV.FPV()
     fpv.capture_thread(addr[0])
 
 
 def run():
     global direction_command, turn_command, SmoothMode, steadyMode
-    moving_threading=threading.Thread(target=move_thread)    #Define a thread for moving
-    moving_threading.setDaemon(True)                         #'True' means it is a front thread,it would close when the mainloop() closes
-    moving_threading.start()                                 #Thread starts
+    # Define a thread for moving
+    moving_threading = threading.Thread(target=move_thread)
+    # 'True' means it is a front thread,
+    # it would close when the mainloop() closes
+    moving_threading.setDaemon(True)
+    # Thread starts
+    moving_threading.start()
 
-    info_threading=threading.Thread(target=info_send_client)   #Define a thread for communication
-    info_threading.setDaemon(True)                             #'True' means it is a front thread,it would close when the mainloop() closes
-    info_threading.start()                                     #Thread starts
+    # Define a thread for communication
+    info_threading = threading.Thread(target=info_send_client)
+    # 'True' means it is a front thread,it would close when the
+    # mainloop() closes
+    info_threading.setDaemon(True)
+    # Thread starts
+    info_threading.start()
 
-    #info_threading=threading.Thread(target=FPV_thread)    #Define a thread for FPV and OpenCV
-    #info_threading.setDaemon(True)                        #'True' means it is a front thread,it would close when the mainloop() closes
-    #info_threading.start()                                #Thread starts
+    # Define a thread for FPV and OpenCV
+    # info_threading=threading.Thread(target=FPV_thread)
+    # 'True' means it is a front thread,it would close when the mainloop() closes
+    # info_threading.setDaemon(True)
+    # Thread starts
+    # info_threading.start()
 
     ws_R = 0
     ws_G = 0
@@ -194,7 +206,7 @@ def run():
     Y_pitch_MAX = 600
     Y_pitch_MIN = 100
 
-    while True: 
+    while True:
         data = ''
         data = str(tcpCliSock.recv(BUFSIZ).decode())
         if not data:
@@ -212,7 +224,7 @@ def run():
             turn_command = 'right'
         elif 'leftside' == data:
             turn_command = 'left'
-        elif 'rightside'== data:
+        elif 'rightside' == data:
             turn_command = 'right'
         elif 'TS' in data:
             turn_command = 'no'
@@ -231,23 +243,23 @@ def run():
 
         elif 'wsR' in data:
             try:
-                set_R=data.split()
+                set_R = data.split()
                 ws_R = int(set_R[1])
-                LED.colorWipe(Color(ws_R,ws_G,ws_B))
+                LED.colorWipe(Color(ws_R, ws_G, ws_B))
             except:
                 pass
         elif 'wsG' in data:
             try:
-                set_G=data.split()
+                set_G = data.split()
                 ws_G = int(set_G[1])
-                LED.colorWipe(Color(ws_R,ws_G,ws_B))
+                LED.colorWipe(Color(ws_R, ws_G, ws_B))
             except:
                 pass
         elif 'wsB' in data:
             try:
-                set_B=data.split()
+                set_B = data.split()
                 ws_B = int(set_B[1])
-                LED.colorWipe(Color(ws_R,ws_G,ws_B))
+                LED.colorWipe(Color(ws_R, ws_G, ws_B))
             except:
                 pass
 
@@ -283,32 +295,32 @@ def run():
             SmoothMode = 0
             tcpCliSock.send(('Smooth_off').encode())
 
-
         elif 'Switch_1_on' in data:
-            switch.switch(1,1)
+            switch.switch(1, 1)
             tcpCliSock.send(('Switch_1_on').encode())
 
         elif 'Switch_1_off' in data:
-            switch.switch(1,0)
+            switch.switch(1, 0)
             tcpCliSock.send(('Switch_1_off').encode())
 
         elif 'Switch_2_on' in data:
-            switch.switch(2,1)
+            switch.switch(2, 1)
             tcpCliSock.send(('Switch_2_on').encode())
 
         elif 'Switch_2_off' in data:
-            switch.switch(2,0)
+            switch.switch(2, 0)
             tcpCliSock.send(('Switch_2_off').encode())
 
         elif 'Switch_3_on' in data:
-            switch.switch(3,1)
+            switch.switch(3, 1)
             tcpCliSock.send(('Switch_3_on').encode())
 
         elif 'Switch_3_off' in data:
-            switch.switch(3,0)
+            switch.switch(3, 0)
             tcpCliSock.send(('Switch_3_off').encode())
 
-        elif 'CVFL' in data:#2 start
+        # 2 start
+        elif 'CVFL' in data:
             if not FPV.FindLineMode:
                 FPV.FindLineMode = 1
                 tcpCliSock.send(('CVFL_on').encode())
@@ -332,7 +344,7 @@ def run():
 
         elif 'lip1' in data:
             try:
-                set_lip1=data.split()
+                set_lip1 = data.split()
                 lip1_set = int(set_lip1[1])
                 FPV.linePos_1 = lip1_set
             except:
@@ -340,33 +352,34 @@ def run():
 
         elif 'lip2' in data:
             try:
-                set_lip2=data.split()
+                set_lip2 = data.split()
                 lip2_set = int(set_lip2[1])
                 FPV.linePos_2 = lip2_set
             except:
                 pass
 
-        elif 'err' in data:#2 end
+        # 2 end
+        elif 'err' in data:
             try:
-                set_err=data.split()
+                set_err = data.split()
                 err_set = int(set_err[1])
                 FPV.findLineError = err_set
             except:
                 pass
-
-        elif 'setEC' in data:#Z
+        # Z
+        elif 'setEC' in data:
             ECset = data.split()
             try:
                 fpv.setExpCom(int(ECset[1]))
             except:
                 pass
-
-        elif 'defEC' in data:#Z
+        # Z
+        elif 'defEC' in data:
             fpv.defaultExpCom()
 
         else:
             pass
-        #print(data)
+        # print(data)
 
 
 def destory():
@@ -374,75 +387,90 @@ def destory():
 
 
 if __name__ == '__main__':
+    # Setup the pins
     switch.switchSetup()
     switch.set_all_switch_off()
     move.init_all()
 
     HOST = ''
-    PORT = 10223                              #Define port serial 
-    BUFSIZ = 1024                             #Define buffer size
+    # Define port serial
+    PORT = 10223
+    # Define buffer size
+    BUFSIZ = 1024
     ADDR = (HOST, PORT)
 
     try:
-        led_threading=threading.Thread(target=breath_led)         #Define a thread for LED breathing
-        led_threading.setDaemon(True)                             #'True' means it is a front thread,it would close when the mainloop() closes
-        led_threading.start()                                     #Thread starts
+        # Define a thread for LED breathing
+        led_threading = threading.Thread(target=breath_led)
+        # 'True' means it is a front thread,it would close when the mainloop() closes
+        led_threading.setDaemon(True)
+        # Thread starts
+        led_threading.start()
         LED.breath_color_set('blue')
     except:
         pass
 
-    while  1:
+    while 1:
         try:
-            s =socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-            s.connect(("1.1.1.1",80))
-            ipaddr_check=s.getsockname()[0]
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("1.1.1.1", 80))
+            ipaddr_check = s.getsockname()[0]
             s.close()
             print(ipaddr_check)
         except:
-            ap_threading=threading.Thread(target=ap_thread)   #Define a thread for data receiving
-            ap_threading.setDaemon(True)                          #'True' means it is a front thread,it would close when the mainloop() closes
-            ap_threading.start()                                  #Thread starts
+            # Define a thread for data receiving
+            ap_threading = threading.Thread(target=ap_thread)   
+            # 'True' means it is a front thread,it would close when 
+            # the mainloop() closes
+            ap_threading.setDaemon(True)
+            # Thread starts
+            ap_threading.start()
 
-            LED.colorWipe(Color(0,16,50))
+            LED.colorWipe(Color(0, 16, 50))
             time.sleep(1)
-            LED.colorWipe(Color(0,16,100))
+            LED.colorWipe(Color(0, 16, 100))
             time.sleep(1)
-            LED.colorWipe(Color(0,16,150))
+            LED.colorWipe(Color(0, 16, 150))
             time.sleep(1)
-            LED.colorWipe(Color(0,16,200))
+            LED.colorWipe(Color(0, 16, 200))
             time.sleep(1)
-            LED.colorWipe(Color(0,16,255))
+            LED.colorWipe(Color(0, 16, 255))
             time.sleep(1)
-            LED.colorWipe(Color(35,255,35))
+            LED.colorWipe(Color(35, 255, 35))
 
         try:
             tcpSerSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            tcpSerSock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+            tcpSerSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             tcpSerSock.bind(ADDR)
-            tcpSerSock.listen(5)                      #Start server,waiting for client
+            # Start server,waiting for client
+            tcpSerSock.listen(5)
             print('waiting for connection...')
             tcpCliSock, addr = tcpSerSock.accept()
             print('...connected from :', addr)
 
-            fps_threading=threading.Thread(target=FPV_thread)         #Define a thread for FPV and OpenCV
-            fps_threading.setDaemon(True)                             #'True' means it is a front thread,it would close when the mainloop() closes
-            fps_threading.start()                                     #Thread starts
+            # Define a thread for FPV and OpenCV
+            fps_threading=threading.Thread(target=FPV_thread)
+            # 'True' means it is a front thread,it would close when the 
+            # mainloop() closes
+            fps_threading.setDaemon(True)
+            # Thread starts
+            fps_threading.start()
             break
         except:
             pass
 
     try:
         LED.breath_status_set(0)
-        LED.colorWipe(Color(64,128,255))
+        LED.colorWipe(Color(64, 128, 255))
     except:
         pass
 
     # try:
-    run()   
+    run()
     # except:
-    LED.colorWipe(Color(0,0,0))
+    LED.colorWipe(Color(0, 0, 0))
     destory()
     move.clean_all()
-    switch.switch(1,0)
-    switch.switch(2,0)
-    switch.switch(3,0)
+    switch.switch(1, 0)
+    switch.switch(2, 0)
+    switch.switch(3, 0)

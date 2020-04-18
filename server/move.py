@@ -14,7 +14,7 @@ import PID
 '''
 change this variables to 0 to reverse all the servos.
 '''
-set_direction = 1
+set_direction = 0
 
 '''
 change these two variables to reverse the direction of the legs.

@@ -344,7 +344,7 @@ def left_III(pos,wiggle,heightAdjust=0):
 					pwm.set_pwm(5,0,pwm5+height_change)
 
 
-def right_I(pos,wiggle,heightAdjust=0):
+def right_I(pos, wiggle, heightAdjust=0):
 	#wiggle = -wiggle
 	if pos == 0:
 		#pwm.set_pwm(6,0,pwm6)

@@ -99,7 +99,7 @@ def move_thread():
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, 35, 'no')
+                    move.move(step_set, 70, 'no')
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -113,7 +113,7 @@ def move_thread():
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, -35, 'no')
+                    move.move(step_set, -70, 'no')
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -130,7 +130,7 @@ def move_thread():
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, 35, turn_command)
+                    move.move(step_set, 70, turn_command)
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -154,14 +154,14 @@ def info_send_client():
     SERVER_IP = addr[0]
     # Define port serial
     SERVER_PORT = 2256
-    server_addr = (server_ip, server_port)
+    SERVER_ADDR = (SERVER_IP, SERVER_PORT)
     # set connection value for socket
-    info_socket = socket.socket(socket.af_inet, socket.sock_stream)
-    Info_Socket.connect(SERVER_ADDR)
+    info_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    info_socket.connect(SERVER_ADDR)
     print(SERVER_ADDR)
     while 1:
         try:
-            Info_Socket.send((get_cpu_tempfunc()+' '+get_cpu_use()+' '+get_ram_info()).encode())
+            info_socket.send((get_cpu_tempfunc()+' '+get_cpu_use()+' '+get_ram_info()).encode())
             time.sleep(1)
         except:
             pass

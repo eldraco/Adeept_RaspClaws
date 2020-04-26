@@ -99,7 +99,7 @@ def move_thread():
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, 35, 'no')
+                    move.move(step_set, 70, 'no')
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -113,7 +113,7 @@ def move_thread():
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, -35, 'no')
+                    move.move(step_set, -70, 'no')
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -130,7 +130,7 @@ def move_thread():
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, 35, turn_command)
+                    move.move(step_set, 70, turn_command)
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:

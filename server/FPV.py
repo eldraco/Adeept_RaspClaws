@@ -16,8 +16,6 @@ from picamera.array import PiRGBArray
 import argparse
 import imutils
 from collections import deque
-import psutil
-import os
 import LED
 import datetime
 from rpi_ws281x import *
@@ -58,7 +56,7 @@ class runThreading (threading.Thread):#2
         self.command = command
 
     def run(self):
-        print ("开始线程：" + self.name)
+        print ("Start FPV thread：" + self.name)
         step = 1
         while 1:
             # print(self.moving,":",self.speed, ":", self.command)

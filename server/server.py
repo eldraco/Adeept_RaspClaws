@@ -93,13 +93,13 @@ def move_thread():
         if not steadyMode:
             if direction_command == 'forward' and turn_command == 'no':
                 if SmoothMode:
-                    move.dove(step_set, 35, 0.001, DPI, 'no')
+                    move.dove(step_set, 60, 0.01, DPI, 'no')
                     step_set += 1
                     if step_set == 5:
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, 70, 'no')
+                    move.move(step_set, 60, 'no')
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -107,13 +107,13 @@ def move_thread():
                     continue
             elif direction_command == 'backward' and turn_command == 'no':
                 if SmoothMode:
-                    move.dove(step_set, -35, 0.001, DPI, 'no')
+                    move.dove(step_set, -60, 0.01, DPI, 'no')
                     step_set += 1
                     if step_set == 5:
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, -70, 'no')
+                    move.move(step_set, -60, 'no')
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -124,13 +124,13 @@ def move_thread():
 
             if turn_command != 'no':
                 if SmoothMode:
-                    move.dove(step_set, 35, 0.001, DPI, turn_command)
+                    move.dove(step_set, 60, 0.01, DPI, turn_command)
                     step_set += 1
                     if step_set == 5:
                         step_set = 1
                     continue
                 else:
-                    move.move(step_set, 70, turn_command)
+                    move.move(step_set, 60, turn_command)
                     time.sleep(0.1)
                     step_set += 1
                     if step_set == 5:
@@ -174,9 +174,6 @@ def FPV_thread():
 
 
 def run():
-    """
-    Looks like the main function to move the robot
-    """
     global direction_command, turn_command, SmoothMode, steadyMode
     # Define a thread for moving
     moving_threading = threading.Thread(target=move_thread)
@@ -201,7 +198,6 @@ def run():
     # Thread starts
     # info_threading.start()
 
-    # Colors of some threads
     ws_R = 0
     ws_G = 0
     ws_B = 0
@@ -212,7 +208,6 @@ def run():
 
     while True:
         data = ''
-        # The tcpCliSock is the socket used with the client to receive data
         data = str(tcpCliSock.recv(BUFSIZ).decode())
         if not data:
             continue
@@ -397,7 +392,6 @@ if __name__ == '__main__':
     switch.set_all_switch_off()
     move.init_all()
 
-    # An empty host means that its going to listen in all the IP addresses of the Raspberry PI
     HOST = ''
     # Define port serial
     PORT = 10223
@@ -416,18 +410,14 @@ if __name__ == '__main__':
     except:
         pass
 
-    # Execute forever
     while 1:
         try:
-            # Get the local IP address of the Robot
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            # This connection never gets out, it only creates a socket internally
             s.connect(("1.1.1.1", 80))
             ipaddr_check = s.getsockname()[0]
             s.close()
-            print(f'Local IP of the robot: {ipaddr_check}')
+            print(ipaddr_check)
         except:
-            # If we don't have internet, then create an access point and wait for connections
             # Define a thread for data receiving
             ap_threading = threading.Thread(target=ap_thread)   
             # 'True' means it is a front thread,it would close when 
@@ -436,40 +426,31 @@ if __name__ == '__main__':
             # Thread starts
             ap_threading.start()
 
-            # After starting the thread, put some colors in the leds.
-            # Blue, not so bright
             LED.colorWipe(Color(0, 16, 50))
             time.sleep(1)
-            # Blue, more bright
             LED.colorWipe(Color(0, 16, 100))
             time.sleep(1)
-            # Blue, half bright
             LED.colorWipe(Color(0, 16, 150))
             time.sleep(1)
-            # Blue, almost all bright
             LED.colorWipe(Color(0, 16, 200))
             time.sleep(1)
-            # Blue, full bright
             LED.colorWipe(Color(0, 16, 255))
             time.sleep(1)
-            # Green
             LED.colorWipe(Color(35, 255, 35))
 
         try:
-            # Open the server port where we receive the orders
             tcpSerSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             tcpSerSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             tcpSerSock.bind(ADDR)
-            # Start server, waiting for client
+            # Start server,waiting for client
             tcpSerSock.listen(5)
             print('waiting for connection...')
-            # This is a locking condition. The robot won't do anything if a client is not connected
             tcpCliSock, addr = tcpSerSock.accept()
             print('...connected from :', addr)
 
             # Define a thread for FPV and OpenCV
-            fps_threading = threading.Thread(target=FPV_thread)
-            # 'True' means it is a front thread,it would close when the
+            fps_threading=threading.Thread(target=FPV_thread)
+            # 'True' means it is a front thread,it would close when the 
             # mainloop() closes
             fps_threading.setDaemon(True)
             # Thread starts
@@ -484,9 +465,9 @@ if __name__ == '__main__':
     except:
         pass
 
-    # Main Function to receive data from the client
+    # try:
     run()
-    # Do something with leds
+    # except:
     LED.colorWipe(Color(0, 0, 0))
     destory()
     move.clean_all()

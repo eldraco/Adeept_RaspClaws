@@ -6,7 +6,9 @@
 # Author	  : William
 # Date		: 2019/04/08
 import time
+# Python code to use the PCA9685 PWM servo/LED controller with a Raspberry Pi or BeagleBone black.
 import Adafruit_PCA9685
+# Library to access the accelerometers and gyroscopes
 from mpu6050 import mpu6050
 import Kalman_filter
 import PID
@@ -20,21 +22,21 @@ set_direction = 0
 change these two variables to reverse the direction of the legs.
 '''
 if set_direction:
-	leftSide_direction  = 1
-	rightSide_direction = 0
+    leftSide_direction = 1
+    rightSide_direction = 0
 else:
-	leftSide_direction  = 0
-	rightSide_direction = 1
+    leftSide_direction = 0
+    rightSide_direction = 1
 
 '''
 change these two variables to reverse the height of the legs.
 '''
 if set_direction:
-	leftSide_height  = 0
-	rightSide_height = 1
+    leftSide_height = 0
+    rightSide_height = 1
 else:
-	leftSide_height  = 1
-	rightSide_height = 0
+    leftSide_height = 1
+    rightSide_height = 0
 
 '''
 change this variable to set the range of the height range.
@@ -45,11 +47,11 @@ height_change = 30
 change these two variables to adjuest the function for observing.
 '''
 if set_direction:
-	Up_Down_direction = 1
-	Left_Right_direction = 1
+    Up_Down_direction = 1
+    Left_Right_direction = 1
 else:
-	Up_Down_direction = 0
-	Left_Right_direction = 0
+    Up_Down_direction = 0
+    Left_Right_direction = 0
 Left_Right_input = 300
 Up_Down_input = 300
 Left_Right_Max = 500
@@ -90,14 +92,14 @@ Y_pid.SetKd(I)
 Y_pid.SetKi(D)
 pwm = Adafruit_PCA9685.PCA9685()
 pwm.set_pwm_freq(50)
-kalman_filter_X =  Kalman_filter.Kalman_filter(0.001,0.1)
-kalman_filter_Y =  Kalman_filter.Kalman_filter(0.001,0.1)
+kalman_filter_X = Kalman_filter.Kalman_filter(0.001, 0.1)
+kalman_filter_Y = Kalman_filter.Kalman_filter(0.001, 0.1)
 
 try:
-	sensor = mpu6050(0x68)
-	mpu6050_connection = 1
+    sensor = mpu6050(0x68)
+    mpu6050_connection = 1
 except:
-	mpu6050_connection = 0
+    mpu6050_connection = 0
 
 '''
 change these two variable to adjuest the steady status.
@@ -115,32 +117,35 @@ target_Y = 0
 
 '''
 Set a default pwm value for all servos.
+This sets the weird pwm values!
 '''
-for i in range(0,16):
-	exec('pwm%d=300'%i)
+for i in range(0, 16):
+    exec('pwm%d=300' % i)
 
-'''
-Get raw data from mpu6050.
-'''
+
 def mpu6050Test():
-	while 1:
-		accelerometer_data = sensor.get_accel_data()
-		print('X=%f,Y=%f,Z=%f'%(accelerometer_data['x'],accelerometer_data['y'],accelerometer_data['x']))
-		time.sleep(0.3)
+    '''
+    Get raw data from mpu6050.
+    '''
+    while 1:
+        accelerometer_data = sensor.get_accel_data()
+        print('X=%f,Y=%f,Z=%f' % (accelerometer_data['x'], accelerometer_data['y'], accelerometer_data['x']))
+        time.sleep(0.3)
 
-		
+
 def init_all():
-	pwm.set_all_pwm(0,300)
-	
+    pwm.set_all_pwm(0, 300)
+
 
 def ctrl_range(raw, max_genout, min_genout):
-	if raw > max_genout:
-		raw_output = max_genout
-	elif raw < min_genout:
-		raw_output = min_genout
-	else:
-		raw_output = raw
-	return int(raw_output)
+    if raw > max_genout:
+        raw_output = max_genout
+    elif raw < min_genout:
+        raw_output = min_genout
+    else:
+        raw_output = raw
+    return int(raw_output)
+
 
 '''
 left_I   -<forward>-- right_III
@@ -155,245 +160,249 @@ left_III -<Backward>-   right_I
 
 Change the value of wiggle to set the range and direction that the legs moves.
 '''
-def left_I(pos,wiggle,heightAdjust=0):
-	if pos == 0:
-		#pwm.set_pwm(0,0,pwm0)
-		if leftSide_height:
-			pwm.set_pwm(1,0,pwm1+heightAdjust)
-		else:
-			pwm.set_pwm(1,0,pwm1-heightAdjust)
-	else:
-		if leftSide_direction:
-			if pos == 1:
-				pwm.set_pwm(0,0,pwm0)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1+3*height_change)
-				else:
-					pwm.set_pwm(1,0,pwm1-3*height_change)
-			elif pos == 2:
-				pwm.set_pwm(0,0,pwm0+wiggle)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1-height_change)
-				else:
-					pwm.set_pwm(1,0,pwm1+height_change)
-			elif pos == 3:
-				pwm.set_pwm(0,0,pwm0)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1-height_change)
-				else:
-					pwm.set_pwm(1,0,pwm1+height_change)
-			elif pos == 4:
-				pwm.set_pwm(0,0,pwm0-wiggle)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1-height_change)
-				else:
-					pwm.set_pwm(1,0,pwm1+height_change)
-		else:
-			if pos == 1:
-				pwm.set_pwm(0,0,pwm0)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1+3*wiggle)
-				else:
-					pwm.set_pwm(1,0,pwm1-3*wiggle)
-			elif pos == 2:
-				pwm.set_pwm(0,0,pwm0-wiggle)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1-wiggle)
-				else:
-					pwm.set_pwm(1,0,pwm1+wiggle)
-			elif pos == 3:
-				pwm.set_pwm(0,0,pwm0)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1-wiggle)
-				else:
-					pwm.set_pwm(1,0,pwm1+wiggle)
-			elif pos == 4:
-				pwm.set_pwm(0,0,pwm0+wiggle)
-				if leftSide_height:
-					pwm.set_pwm(1,0,pwm1-wiggle)
-				else:
-					pwm.set_pwm(1,0,pwm1+wiggle)
+
+def left_I(pos, wiggle, heightAdjust=0):
+    wiggle = -wiggle
+    if pos == 0:
+        # pwm.set_pwm(0,0,pwm0)
+        if leftSide_height:
+            pwm.set_pwm(1, 0, pwm1+heightAdjust)
+        else:
+            pwm.set_pwm(1, 0, pwm1-heightAdjust)
+    else:
+        if leftSide_direction:
+                if pos == 1:
+                        pwm.set_pwm(0,0,pwm0)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1+3*height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1-3*height_change)
+                elif pos == 2:
+                        pwm.set_pwm(0,0,pwm0+wiggle)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1-height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1+height_change)
+                elif pos == 3:
+                        pwm.set_pwm(0,0,pwm0)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1-height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1+height_change)
+                elif pos == 4:
+                        pwm.set_pwm(0,0,pwm0-wiggle)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1-height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1+height_change)
+        else:
+                if pos == 1:
+                        pwm.set_pwm(0,0,pwm0)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1+3*height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1-3*height_change)
+                elif pos == 2:
+                        pwm.set_pwm(0,0,pwm0-wiggle)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1-height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1+height_change)
+                elif pos == 3:
+                        pwm.set_pwm(0,0,pwm0)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1-height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1+height_change)
+                elif pos == 4:
+                        pwm.set_pwm(0,0,pwm0+wiggle)
+                        if leftSide_height:
+                                pwm.set_pwm(1,0,pwm1-height_change)
+                        else:
+                                pwm.set_pwm(1,0,pwm1+height_change)
 
 
 def left_II(pos,wiggle,heightAdjust=0):
-	if pos == 0:
-		#pwm.set_pwm(2,0,pwm2)
-		if leftSide_height:
-			pwm.set_pwm(3,0,pwm3+heightAdjust)
-		else:
-			pwm.set_pwm(3,0,pwm3-heightAdjust)
-	else:
-		if leftSide_direction:
-			if pos == 1:
-				pwm.set_pwm(2,0,pwm2)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3+3*height_change)
-				else:
-					pwm.set_pwm(3,0,pwm3-3*height_change)
-			elif pos == 2:
-				pwm.set_pwm(2,0,pwm2+wiggle)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3-height_change)
-				else:
-					pwm.set_pwm(3,0,pwm3+height_change)
-			elif pos == 3:
-				pwm.set_pwm(2,0,pwm2)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3-height_change)
-				else:
-					pwm.set_pwm(3,0,pwm3+height_change)
-			elif pos == 4:
-				pwm.set_pwm(2,0,pwm2-wiggle)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3-height_change)
-				else:
-					pwm.set_pwm(3,0,pwm3+height_change)
-		else:
-			if pos == 1:
-				pwm.set_pwm(2,0,pwm2)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3+3*wiggle)
-				else:
-					pwm.set_pwm(3,0,pwm3-3*wiggle)
-			elif pos == 2:
-				pwm.set_pwm(2,0,pwm2-wiggle)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3-wiggle)
-				else:
-					pwm.set_pwm(3,0,pwm3+wiggle)
-			elif pos == 3:
-				pwm.set_pwm(2,0,pwm2)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3-wiggle)
-				else:
-					pwm.set_pwm(3,0,pwm3+wiggle)
-			elif pos == 4:
-				pwm.set_pwm(2,0,pwm2+wiggle)
-				if leftSide_height:
-					pwm.set_pwm(3,0,pwm3-wiggle)
-				else:
-					pwm.set_pwm(3,0,pwm3+wiggle)
+    wiggle = -wiggle
+    if pos == 0:
+        #pwm.set_pwm(2,0,pwm2)
+        if leftSide_height:
+            pwm.set_pwm(3, 0, pwm3+heightAdjust)
+        else:
+            pwm.set_pwm(3, 0, pwm3-heightAdjust)
+    else:
+        if leftSide_direction:
+            if pos == 1:
+                pwm.set_pwm(2, 0, pwm2)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3+3*height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3-3*height_change)
+            elif pos == 2:
+                pwm.set_pwm(2, 0, pwm2+wiggle)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3-height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3+height_change)
+            elif pos == 3:
+                pwm.set_pwm(2, 0, pwm2)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3-height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3+height_change)
+            elif pos == 4:
+                pwm.set_pwm(2, 0, pwm2-wiggle)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3-height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3+height_change)
+        else:
+            if pos == 1:
+                pwm.set_pwm(2, 0, pwm2)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3+3*height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3-3*height_change)
+            elif pos == 2:
+                pwm.set_pwm(2, 0, pwm2-wiggle)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3-height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3+height_change)
+            elif pos == 3:
+                pwm.set_pwm(2, 0, pwm2)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3-height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3+height_change)
+            elif pos == 4:
+                pwm.set_pwm(2, 0, pwm2+wiggle)
+                if leftSide_height:
+                    pwm.set_pwm(3, 0, pwm3-height_change)
+                else:
+                    pwm.set_pwm(3, 0, pwm3+height_change)
 
 
 def left_III(pos,wiggle,heightAdjust=0):
-	if pos == 0:
-		#pwm.set_pwm(4,0,pwm4)
-		if leftSide_height:
-			pwm.set_pwm(5,0,pwm5+heightAdjust)
-		else:
-			pwm.set_pwm(5,0,pwm5-heightAdjust)
-	else:
-		if leftSide_direction:
-			if pos == 1:
-				pwm.set_pwm(4,0,pwm4)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5+3*height_change)
-				else:
-					pwm.set_pwm(5,0,pwm5-3*height_change)
-			elif pos == 2:
-				pwm.set_pwm(4,0,pwm4+wiggle)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5-height_change)
-				else:
-					pwm.set_pwm(5,0,pwm5+height_change)
-			elif pos == 3:
-				pwm.set_pwm(4,0,pwm4)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5-height_change)
-				else:
-					pwm.set_pwm(5,0,pwm5+height_change)
-			elif pos == 4:
-				pwm.set_pwm(4,0,pwm4-wiggle)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5-height_change)
-				else:
-					pwm.set_pwm(5,0,pwm5+height_change)
-		else:
-			if pos == 1:
-				pwm.set_pwm(4,0,pwm4)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5+3*wiggle)
-				else:
-					pwm.set_pwm(5,0,pwm5-3*wiggle)
-			elif pos == 2:
-				pwm.set_pwm(4,0,pwm4-wiggle)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5-wiggle)
-				else:
-					pwm.set_pwm(5,0,pwm5+wiggle)
-			elif pos == 3:
-				pwm.set_pwm(4,0,pwm4)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5-wiggle)
-				else:
-					pwm.set_pwm(5,0,pwm5+wiggle)
-			elif pos == 4:
-				pwm.set_pwm(4,0,pwm4+wiggle)
-				if leftSide_height:
-					pwm.set_pwm(5,0,pwm5-wiggle)
-				else:
-					pwm.set_pwm(5,0,pwm5+wiggle)
+    wiggle = -wiggle
+    if pos == 0:
+            #pwm.set_pwm(4,0,pwm4)
+            if leftSide_height:
+                    pwm.set_pwm(5,0,pwm5+heightAdjust)
+            else:
+                    pwm.set_pwm(5,0,pwm5-heightAdjust)
+    else:
+            if leftSide_direction:
+                if pos == 1:
+                    pwm.set_pwm(4,0,pwm4)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5+3*height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5-3*height_change)
+                elif pos == 2:
+                    pwm.set_pwm(4,0,pwm4+wiggle)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5-height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5+height_change)
+                elif pos == 3:
+                    pwm.set_pwm(4,0,pwm4)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5-height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5+height_change)
+                elif pos == 4:
+                    pwm.set_pwm(4,0,pwm4-wiggle)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5-height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5+height_change)
+            else:
+                if pos == 1:
+                    pwm.set_pwm(4,0,pwm4)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5+3*height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5-3*height_change)
+                elif pos == 2:
+                    pwm.set_pwm(4,0,pwm4-wiggle)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5-height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5+height_change)
+                elif pos == 3:
+                    pwm.set_pwm(4,0,pwm4)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5-height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5+height_change)
+                elif pos == 4:
+                    pwm.set_pwm(4,0,pwm4+wiggle)
+                    if leftSide_height:
+                        pwm.set_pwm(5,0,pwm5-height_change)
+                    else:
+                        pwm.set_pwm(5,0,pwm5+height_change)
 
 
-def right_I(pos,wiggle,heightAdjust=0):
-	#wiggle = -wiggle
-	if pos == 0:
-		#pwm.set_pwm(6,0,pwm6)
-		if rightSide_height:
-			pwm.set_pwm(7,0,pwm7+heightAdjust)
-		else:
-			pwm.set_pwm(7,0,pwm7-heightAdjust)
-	else:
-		if rightSide_direction:
-			if pos == 1:
-				pwm.set_pwm(6,0,pwm6)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7+3*height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7-3*height_change)
-			elif pos == 2:
-				pwm.set_pwm(6,0,pwm6+wiggle)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7-height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7+height_change)
-			elif pos == 3:
-				pwm.set_pwm(6,0,pwm6)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7-height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7+height_change)
-			elif pos == 4:
-				pwm.set_pwm(6,0,pwm6-wiggle)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7-height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7+height_change)
-		else:
-			if pos == 1:
-				pwm.set_pwm(6,0,pwm6)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7+3*height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7-3*height_change)
-			elif pos == 2:
-				pwm.set_pwm(6,0,pwm6-wiggle)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7-height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7+height_change)
-			elif pos == 3:
-				pwm.set_pwm(6,0,pwm6)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7-height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7+height_change)
-			elif pos == 4:
-				pwm.set_pwm(6,0,pwm6+wiggle)
-				if rightSide_height:
-					pwm.set_pwm(7,0,pwm7-height_change)
-				else:
-					pwm.set_pwm(7,0,pwm7+height_change)
+def right_I(pos, wiggle, heightAdjust=0):
+    # wiggle = -wiggle
+    if pos == 0:
+        # pwm.set_pwm(6,0,pwm6)
+        if rightSide_height:
+            pwm.set_pwm(7, 0, pwm7+heightAdjust)
+        else:
+            pwm.set_pwm(7, 0, pwm7-heightAdjust)
+    else:
+        if rightSide_direction:
+            if pos == 1:
+                pwm.set_pwm(6, 0, pwm6)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7+3*height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7-3*height_change)
+            elif pos == 2:
+                pwm.set_pwm(6, 0, pwm6+wiggle)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7-height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7+height_change)
+            elif pos == 3:
+                pwm.set_pwm(6, 0, pwm6)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7-height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7+height_change)
+            elif pos == 4:
+                pwm.set_pwm(6, 0, pwm6-wiggle)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7-height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7+height_change)
+        else:
+            if pos == 1:
+                pwm.set_pwm(6, 0, pwm6)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7+3*height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7-3*height_change)
+            elif pos == 2:
+                pwm.set_pwm(6, 0, pwm6-wiggle)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7-height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7+height_change)
+            elif pos == 3:
+                pwm.set_pwm(6, 0, pwm6)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7-height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7+height_change)
+            elif pos == 4:
+                pwm.set_pwm(6, 0, pwm6+wiggle)
+                if rightSide_height:
+                    pwm.set_pwm(7, 0, pwm7-height_change)
+                else:
+                    pwm.set_pwm(7, 0, pwm7+height_change)
 
 
 def right_II(pos,wiggle,heightAdjust=0):
@@ -519,53 +528,51 @@ def right_III(pos,wiggle,heightAdjust=0):
 
 
 def move(step_input, speed, command):
-	step_I  = step_input
-	step_II = step_input + 2
+    print(f'move.py | move() | Received step: {step_input}, speed: {speed}, command: {command}')
+    step_I = step_input
+    step_II = step_input + 2
 
-	if step_II > 4:
-		step_II = step_II - 4
-	if speed == 0:
-		return
+    if step_II > 4:
+        step_II = step_II - 4
+    if speed == 0:
+        return
 
-	if command == 'no':
-		right_I(step_I, speed, 0)
-		left_II(step_I, speed, 0)
-		right_III(step_I, speed, 0)
-
-		left_I(step_II, speed, 0)
-		right_II(step_II, speed, 0)
-		left_III(step_II, speed, 0)
-	elif command == 'left':
-		right_I(step_I, speed, 0)
-		left_II(step_I, -speed, 0)
-		right_III(step_I, speed, 0)
-
-		left_I(step_II, -speed, 0)
-		right_II(step_II, speed, 0)
-		left_III(step_II, -speed, 0)
-	elif command == 'right':
-		right_I(step_I, -speed, 0)
-		left_II(step_I, speed, 0)
-		right_III(step_I, -speed, 0)
-
-		left_I(step_II, speed, 0)
-		right_II(step_II, -speed, 0)
-		left_III(step_II, speed, 0)
+    if command == 'no':
+        right_I(step_I, speed, 0)
+        left_II(step_I, speed, 0)
+        right_III(step_I, speed, 0)
+        left_I(step_II, speed, 0)
+        right_II(step_II, speed, 0)
+        left_III(step_II, speed, 0)
+    elif command == 'left':
+        right_I(step_I, speed, 0)
+        left_II(step_I, -speed, 0)
+        right_III(step_I, speed, 0)
+        left_I(step_II, -speed, 0)
+        right_II(step_II, speed, 0)
+        left_III(step_II, -speed, 0)
+    elif command == 'right':
+        right_I(step_I, -speed, 0)
+        left_II(step_I, speed, 0)
+        right_III(step_I, -speed, 0)
+        left_I(step_II, speed, 0)
+        right_II(step_II, -speed, 0)
+        left_III(step_II, speed, 0)
 
 
 def stand():
-	pwm.set_pwm(0,0,300)
-	pwm.set_pwm(1,0,300)
-	pwm.set_pwm(2,0,300)
-	pwm.set_pwm(3,0,300)
-	pwm.set_pwm(4,0,300)
-	pwm.set_pwm(5,0,300)
-	pwm.set_pwm(6,0,300)
-	pwm.set_pwm(7,0,300)
-	pwm.set_pwm(8,0,300)
-	pwm.set_pwm(9,0,300)
-	pwm.set_pwm(10,0,300)
-	pwm.set_pwm(11,0,300)
+    pwm.set_pwm(0, 0, 300)
+    pwm.set_pwm(1, 0, 300)
+    pwm.set_pwm(2, 0, 300)
+    pwm.set_pwm(3, 0, 300)
+    pwm.set_pwm(4, 0, 300)
+    pwm.set_pwm(5, 0, 300)
+    pwm.set_pwm(6, 0, 300)
+    pwm.set_pwm(7, 0, 300)
+    pwm.set_pwm(8, 0, 300)
+    pwm.set_pwm(9, 0, 300)
+    pwm.set_pwm(10, 0, 300)
+    pwm.set_pwm(11, 0, 300)
 
 
 '''
@@ -1059,15 +1066,15 @@ def look_home():
 
 
 def relesae():
-	pwm.set_all_pwm(0,0)
+    pwm.set_all_pwm(0, 0)
 
 
 def clean_all():
-	pwm.set_all_pwm(0, 0)
+    pwm.set_all_pwm(0, 0)
 
 
 def destroy():
-	clean_all()
+    clean_all()
 
 
 if __name__ == '__main__':
@@ -1097,13 +1104,10 @@ if __name__ == '__main__':
 		while 1:
 			steady()
 			time.sleep(0.02)
-		'''
-		
-		
-		'''
+
 		for i in range(0,9):
 			look_left()
-			time.sleep(1)
+                        time.sleep(1)
 		for i in range(0,16):
 			look_right()
 			time.sleep(1)	
